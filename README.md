@@ -1,2 +1,2 @@
-# Phish-and-Chips
+# Phish and Chips
 A phishing email framework.
