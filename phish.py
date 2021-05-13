@@ -21,7 +21,7 @@ header = """
 
 print(header)
 
-parser = argparse.ArgumentParser(description='A phishing email sender.')
+parser = argparse.ArgumentParser(description='A phishing email framework.')
 parser.add_argument("-e", metavar='email template', help="email template to send", required=True)
 parser.add_argument("-s", metavar='sender name', help="name of sender for phishing email", required=True)
 parser.add_argument("-u", metavar='username', help="SMTP username")
