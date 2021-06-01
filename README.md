@@ -134,3 +134,163 @@ optional arguments:
   -v                 enable verbose output
 ```
 
+
+
+## Including Your Own Templates
+
+**Phish and Chips** has been built to be adaptable. If you have a HTML template you want to include, it's easy to add it in.
+
+### 1. Make a New Class
+
+First thing you are going to need is a new class. Make a new Python file in the root directory with the same name as your class (for example, ***Happy.py***) and setup a class that inherits the **EmailTemplate** class.
+
+For example:
+
+**Happy.py**
+
+```python
+import EmailTemplate
+
+class Happy(EmailTemplate.EmailTemplate):
+	def __init__(self, email, full_name, first_name, record, sender_name, recipient):
+		super().__init__(email, full_name, first_name, record, sender_name, recipient, content, "Happy Subject")
+
+content = """
+  <!DOCTYPE html>
+  <head>
+  <title>Happy Email</title>
+  </head>
+  <body>
+  Hello {first_name}, I hope you're happy!
+  </body>
+  </html>
+"""
+```
+
+You'll need to include a variable, **content**, that is passed as the second last parameter of the ***super().\_\_init\_\_()*** function. You'll also need to pass in the subject for all emails sent with this template. In this example, the subject is ***Happy Subject***. 
+
+#### Some Notes About HTML Content
+
+- All HTML content is automatically formatted via the **EmailTemplate** parent class
+
+- Any instance of **{first_name}**, **{full_name}**, **{record}** and **{email}** will be replaced with the receiver's first name, full name, record and email
+
+- If you include any other curly brackets within your HTML content, for example in CSS styling, you'll need to double-wrap them.
+
+- Notice the style component in the following example:
+
+  - ```python
+    content = """
+      <!DOCTYPE html>
+      <head>
+      <title>Happy Email</title>
+      <style>
+      body {{
+        background-color: red;
+      }}
+      </style>
+      </head>
+      <body>
+      Hello {first_name}, I hope you're happy!
+      </body>
+      </html>
+    """
+    ```
+
+
+
+### 2. Add Your Template as an Option
+
+Next, you'll need to revisit **phish.py** and add in your new template in the ***options*** variable on line 11.
+
+For example:
+
+```python
+options = {"1": "LinkedIn", "2": "Happy"}
+```
+
+Ensure the option name is **exactly the same** as your class name.
+
+
+
+### 3. Include Images in Your Template (Optional)
+
+If you'd like to include images within your template, you'll need to set them up within your newly-created class.
+
+To ensure images aren't included as attachments within your email, **Phish and Chips** recommends the use of **MIMEImage**.
+
+#### Example
+
+Let's say that we'd like to include a smiley face picture, **smiley.jpg** within our ***Happy*** email template.
+
+##### 1. Include Image in HTML Content
+
+Firstly, we need to decide on a name for the image -- in this example, the name assigned is **smiley**. Next, configure your HTML like this:
+
+```python
+content = """
+  <!DOCTYPE html>
+  <head>
+  <title>Happy Email</title>
+  <style>
+  body {{
+    background-color: red;
+  }}
+  </style>
+  </head>
+  <body>
+  Hello {first_name}, I hope you're happy!
+  <img src="cid:smiley"></img>
+  </body>
+  </html>
+"""
+```
+
+Notice the **src** of the image has been set to ***cid:smiley***.
+
+##### 2. Edit the Classes Build Function
+
+Now you'll need to override the **EmailTemplate** **build** function. Below is an example of how to do this:
+
+**Happy.py**
+
+```python
+import EmailTemplate
+from email.mime.image import MIMEImage
+
+class Happy(EmailTemplate.EmailTemplate):
+	def __init__(self, email, full_name, first_name, record, sender_name, recipient):
+		super().__init__(email, full_name, first_name, record, sender_name, recipient, content, "Happy Subject")
+    
+    def build(self):
+        msg = super().build()
+        
+        fp = open('happy/smiley.jpg', 'rb')
+        msgImage = MIMEImage(fp.read())
+        fp.close()
+        
+        msgImage.add_header('Content-ID', '<smiley>')
+        msg.attach(msgImage)
+        
+        return msg
+
+content = """
+  <!DOCTYPE html>
+  <head>
+  <title>Happy Email</title>
+  <style>
+  body {{
+    background-color: red;
+  }}
+  </style>
+  </head>
+  <body>
+  Hello {first_name}, I hope you're happy!
+  <img src="cid:smiley"></img>
+  </body>
+  </html>
+"""
+```
+
+
+
